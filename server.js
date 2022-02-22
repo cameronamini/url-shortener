@@ -2,6 +2,10 @@ const express = require('express')
 const mongoose = require('mongoose')
 const ShortUrl = require('./models/shortUrl')
 const app = express()
+const morgan = require('morgan')
+const helmet = require('helmet')
+const rateLimit = require("express-rate-limit");
+
 const {PORT, MONGODB_URI} = require('./utils/config')
 
 mongoose.connect(MONGODB_URI, {
@@ -10,6 +14,13 @@ mongoose.connect(MONGODB_URI, {
 
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: false }))
+app.use(morgan("common"))
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 20 * 60 * 1000, // 20 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
 
 app.get('/', async (req, res) => {
   const shortUrls = await ShortUrl.find()
